@@ -26,5 +26,6 @@ jobs:
           architecture: ${{ matrix.config.architecture }}
           run: |
             ssh user@localhost "pkgman update -y devel:libpcre devel:libtinyxml2 cmd:gcc gcc_syslibs_devel cmd:make cmd:as cmd:cmake cmd:pkg_config" &&
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DHAVE_RULES=ON -DUSE_BUNDLED_TINYXML2=OFF &&
-            cmake --build build
+            cmake -S . -B cmake.output.tinyxml2 -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DHAVE_RULES=ON -DUSE_BUNDLED_TINYXML2=OFF &&
+            cmake --build cmake.output.tinyxml2 -- -j$(nproc) &&
+            cmake --build cmake.output.tinyxml2 --target check -- -j$(nproc)
