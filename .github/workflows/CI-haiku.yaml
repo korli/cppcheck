@@ -1,0 +1,30 @@
+name: "haiku-ci"
+on: [push, pull_request]
+
+jobs:
+  build-haiku:
+    timeout-minutes: 60
+    runs-on: ${{ matrix.config.runner }}
+    name: build-${{ matrix.config.os }}-${{ matrix.config.version }}-${{ matrix.config.architecture }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          # The OS versions supported are specific to the version of the action
+          # https://github.com/cross-platform-actions/action/blob/master/changelog.md
+          - { os: haiku, version: 'r1beta5', runner: 'ubuntu-latest', architecture: 'x86-64' }
+          - { os: haiku, version: 'nightly', runner: 'ubuntu-latest', architecture: 'x86-64' }
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: korli/action@v0.25.0-haiku4
+        with:
+          operating_system: ${{ matrix.config.os }}
+          version: ${{ matrix.config.version }}
+          architecture: ${{ matrix.config.architecture }}
+          run: |
+            ssh user@localhost "pkgman update -y devel:libpcre devel:libtinyxml2 cmd:gcc gcc_syslibs_devel cmd:make cmd:as cmd:cmake cmd:pkg_config" &&
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DBUILD_TESTS=ON -DHAVE_RULES=ON -DUSE_BUNDLED_TINYXML2=OFF &&
+            cmake --build build
